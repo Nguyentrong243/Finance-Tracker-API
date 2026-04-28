@@ -1,0 +1,854 @@
+<!doctype html>
+{% load humanize %}
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Finance Tracker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body.theme-dark {
+        background: #0f172a;
+        color: #f8fafc;
+      }
+
+      body.theme-dark .navbar {
+        background: #1e293b;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.5);
+      }
+
+      body.theme-dark .sidebar {
+        background: #111827;
+        box-shadow: 4px 0 15px rgba(15, 23, 42, 0.4);
+      }
+
+      body.theme-dark .sidebar-nav .nav-link {
+        color: #e2e8f0;
+      }
+
+      body.theme-dark .sidebar-nav .nav-link:hover,
+      body.theme-dark .sidebar-nav .nav-link.active {
+        background-color: #1e293b;
+        color: #ffffff;
+        border-left-color: #2563eb;
+      }
+
+      body.theme-dark .main-content,
+      body.theme-dark .settings-section,
+      body.theme-dark .stat-card,
+      body.theme-dark .info-box {
+        background: #111827;
+        color: #e2e8f0;
+      }
+
+      body.theme-dark .stat-card {
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.4);
+      }
+
+      body.theme-dark .page-header h1,
+      body.theme-dark .page-header p,
+      body.theme-dark .stat-label,
+      body.theme-dark .stat-value,
+      body.theme-dark .stat-change,
+      body.theme-dark .form-group label,
+      body.theme-dark .setting-name,
+      body.theme-dark .setting-description,
+      body.theme-dark .dropdown-item,
+      body.theme-dark .info-box,
+      body.theme-dark .btn-save,
+      body.theme-dark .btn-danger {
+        color: #f8fafc;
+      }
+
+      body.theme-dark .form-group input,
+      body.theme-dark .form-group select {
+        background: #1f2937;
+        border: 1px solid #334155;
+        color: #e2e8f0;
+      }
+
+      body.theme-dark .btn-save {
+        background: #2563eb;
+      }
+
+      body.theme-dark .btn-danger {
+        background: #ef4444;
+      }
+
+      body.theme-dark .chart-card,
+      body.theme-dark .transactions-container {
+        background: #111827;
+        color: #e2e8f0;
+      }
+
+      body.theme-dark .chart-card h3,
+      body.theme-dark .transactions-container h3 {
+        color: #f8fafc;
+      }
+
+      body.theme-dark .transaction-item {
+        border-color: #334155;
+        color: #e2e8f0;
+      }
+
+      body.theme-dark .transaction-item:hover {
+        background: #1f2937;
+      }
+
+      body.theme-dark .stat-label {
+        color: #cbd5e1;
+      }
+
+      body.theme-dark .stat-value {
+        color: #f8fafc;
+      }
+
+      body.theme-dark .stat-change {
+        color: inherit;
+      }
+
+      body.theme-dark .stat-change.up {
+        color: #86efac;
+      }
+
+      body.theme-dark .stat-change.down {
+        color: #fecaca;
+      }
+
+      body.theme-dark .dropdown-item:hover {
+        background: #1e293b;
+        color: #f8fafc;
+      }
+
+      body.theme-dark .transaction-date {
+        color: #cbd5e1;
+      }
+
+      body.theme-dark .transaction-amount {
+        color: #f8fafc;
+      }
+
+      body.theme-dark .transaction-amount.income {
+        color: #86efac;
+      }
+
+      body.theme-dark .transaction-amount.expense {
+        color: #fecaca;
+      }
+
+      /* Navbar */
+      .navbar {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15);
+        border-bottom: 0;
+        padding: 1rem 2rem;
+      }
+
+      .navbar .brand-logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .navbar .brand-logo i {
+        font-size: 1.8rem;
+      }
+
+      .navbar-nav .nav-item {
+        margin-left: 1rem;
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        transition: color 0.3s ease;
+      }
+
+      .nav-link:hover {
+        color: white !important;
+      }
+
+      .user-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 1.5rem;
+      }
+
+      .dropdown-menu {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .dropdown-item {
+        padding: 0.75rem 1.5rem;
+        color: #2d3748;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+
+      .dropdown-item:hover {
+        background-color: #f3f4f6;
+        color: #2563eb;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: white;
+        min-height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 280px;
+        padding-top: 80px;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
+        overflow-y: auto;
+        z-index: 999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+        padding: 1.5rem 0;
+      }
+
+      .sidebar-nav .nav-item {
+        margin: 0.5rem 0;
+      }
+
+      .sidebar-nav .nav-link {
+        color: #000000 !important;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1.5rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .nav-link i {
+        width: 24px;
+        font-size: 1.1rem;
+      }
+
+      .sidebar-nav .nav-link:hover {
+        background-color: #f3f4f6;
+        color: #000000 !important;
+        border-left-color: #2563eb;
+      }
+
+      .sidebar-nav .nav-link.active {
+        background-color: #e0e7ff;
+        color: #000000 !important;
+        border-left-color: #2563eb;
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-left: 280px;
+        margin-top: 70px;
+        padding: 2rem;
+        min-height: calc(100vh - 70px);
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+
+      .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+      }
+
+      .page-header p {
+        color: #2d3748;
+        font-size: 0.95rem;
+      }
+
+      /* Stats Cards */
+      .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        opacity: 0.1;
+      }
+
+      .stat-card:hover {
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+      }
+
+      .stat-card.income {
+        border-left-color: #10b981;
+      }
+
+      .stat-card.income::before {
+        background: #10b981;
+      }
+
+      .stat-card.expense {
+        border-left-color: #ef4444;
+      }
+
+      .stat-card.expense::before {
+        background: #ef4444;
+      }
+
+      .stat-card.balance {
+        border-left-color: #3b82f6;
+      }
+
+      .stat-card.balance::before {
+        background: #3b82f6;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        color: #4a5568;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1a202c;
+      }
+
+      .stat-change {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+
+      .stat-change.up {
+        color: #10b981;
+      }
+
+      .stat-change.down {
+        color: #ef4444;
+      }
+
+      /* Charts Section */
+      .charts-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      }
+
+      .chart-card h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 1.5rem;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+      }
+
+      /* Recent Transactions */
+      .transactions-container {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      }
+
+      .transactions-container h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 1.5rem;
+      }
+
+      .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s ease;
+      }
+
+      .transaction-item:hover {
+        background: white;
+      }
+
+      .transaction-item:last-child {
+        border-bottom: none;
+      }
+
+      .transaction-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+      }
+
+      .transaction-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .transaction-icon.income {
+        background: #d1fae5;
+        color: #10b981;
+      }
+
+      .transaction-icon.expense {
+        background: #fee2e2;
+        color: #ef4444;
+      }
+
+      .transaction-details {
+        flex: 1;
+      }
+
+      .transaction-description {
+        font-weight: 600;
+        color: #1a202c;
+        font-size: 0.95rem;
+      }
+
+      .transaction-date {
+        font-size: 0.85rem;
+        color: #4a5568;
+      }
+
+      .transaction-amount {
+        font-weight: 700;
+        font-size: 1rem;
+        min-width: 120px;
+        text-align: right;
+        color: #1a202c;
+      }
+
+      .transaction-amount.income {
+        color: #10b981;
+      }
+
+      .transaction-amount.expense {
+        color: #ef4444;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 100%;
+          padding-top: 0;
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar.show {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 1rem;
+        }
+
+        .charts-container {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-container {
+          grid-template-columns: 1fr;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+      }
+
+      /* Scrollbar */
+      .sidebar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: white;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body class="{% if user.is_authenticated %}theme-{{ user.settings_profile.theme_mode }}{% else %}theme-light{% endif %}">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container-fluid">
+        <a class="brand-logo" href="{% url 'home' %}">
+          <i class="fas fa-wallet"></i>
+          Finance Tracker
+        </a>
+
+        <button
+          class="btn btn-light d-lg-none"
+          type="button"
+          id="sidebarToggle"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="ms-auto d-flex align-items-center">
+          <div class="dropdown">
+            <div
+              class="user-avatar"
+              id="userDropdown"
+              data-bs-toggle="dropdown"
+            >
+              {{ user.username|first|upper }}
+            </div>
+            <ul
+              class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="userDropdown"
+            >
+              <li>
+                <a class="dropdown-item" href="{% url 'profile' %}">
+                  <i class="fas fa-user me-2"></i>Hồ sơ
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'settings' %}">
+                  <i class="fas fa-cog me-2"></i>Cài đặt
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'logout' %}">
+                  <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <ul class="sidebar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'dashboard' %}">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'transactions' %}">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Giao dịch</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'reports' %}">
+            <i class="fas fa-chart-pie"></i>
+            <span>Báo cáo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'settings' %}">
+            <i class="fas fa-sliders-h"></i>
+            <span>Cài đặt</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>Chào mừng, {{ user.username }}!</h1>
+          <p>Quản lý tài chính của bạn</p>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-container">
+        <div class="stat-card income">
+          <div class="stat-label">
+            <i class="fas fa-arrow-down"></i>Tổng thu nhập
+          </div>
+          <div class="stat-value">
+            {{ summary.total_income|default:"0"|floatformat:0|intcomma }}₫
+          </div>
+          <div class="stat-change up">
+            <i class="fas fa-arrow-up"></i>+12.5% từ tháng trước
+          </div>
+        </div>
+
+        <div class="stat-card expense">
+          <div class="stat-label">
+            <i class="fas fa-arrow-up"></i>Tổng chi tiêu
+          </div>
+          <div class="stat-value">
+            {{ summary.total_expenses|default:"0"|floatformat:0|intcomma }}₫
+          </div>
+          <div class="stat-change down">
+            <i class="fas fa-arrow-down"></i>-5.2% từ tháng trước
+          </div>
+        </div>
+
+        <div class="stat-card balance">
+          <div class="stat-label"><i class="fas fa-wallet"></i>Số dư</div>
+          <div class="stat-value">
+            {{ summary.balance|default:"0"|floatformat:0|intcomma }}₫
+          </div>
+          <div class="stat-change up">
+            <i class="fas fa-arrow-up"></i>+7.3% so với tháng trước
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-container">
+        <div class="chart-card">
+          <h3>Thu vs Chi (30 ngày gần đây)</h3>
+          <div class="chart-wrapper">
+            <canvas id="incomeExpenseChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Phân bổ chi tiêu</h3>
+          <div class="chart-wrapper">
+            <canvas id="expenseCategoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="transactions-container">
+        <h3>Giao dịch gần đây</h3>
+        {% for entry in summary.recent_activities %}
+        <div class="transaction-item">
+          <div class="transaction-info">
+            <div class="transaction-icon {{ entry.type }}">
+              {% if entry.type == 'income' %}
+              <i class="fas fa-plus"></i>
+              {% else %}
+              <i class="fas fa-minus"></i>
+              {% endif %}
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-description">{{ entry.description }}</div>
+              <div class="transaction-date">{{ entry.date }}</div>
+            </div>
+          </div>
+          <div class="transaction-amount {{ entry.type }}">
+            {% if entry.type == 'income' %} +{{ entry.amount|default:"0"|floatformat:0|intcomma }}₫ {% else %} -{{ entry.amount|default:"0"|floatformat:0|intcomma }}₫ {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Sidebar Toggle
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const sidebar = document.getElementById("sidebar");
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("show");
+        });
+
+        document.addEventListener("click", (e) => {
+          if (
+            !sidebar.contains(e.target) &&
+            !sidebarToggle.contains(e.target) &&
+            window.innerWidth < 768
+          ) {
+            sidebar.classList.remove("show");
+          }
+        });
+      }
+
+      // Income vs Expense Chart
+      const incomeExpenseCtx = document.getElementById("incomeExpenseChart");
+      const incomeTrend = {{ chart_income_trend|safe }};
+      const expenseTrend = {{ chart_expense_trend|safe }};
+      const weekLabels = {{ chart_week_labels|safe }};
+      if (incomeExpenseCtx) {
+        new Chart(incomeExpenseCtx, {
+          type: "line",
+          data: {
+            labels: weekLabels,
+            datasets: [
+              {
+                label: "Thu nhập",
+                data: incomeTrend,
+                borderColor: "#10b981",
+                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: "#10b981",
+              },
+              {
+                label: "Chi tiêu",
+                data: expenseTrend,
+                borderColor: "#ef4444",
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: "#ef4444",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) {
+                    return value.toLocaleString("vi-VN") + "₫";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Expense Category Chart
+      const expenseCategoryCtx = document.getElementById(
+        "expenseCategoryChart",
+      );
+      const expenseCategoryLabels = {{ expense_category_labels|safe }};
+      const expenseCategoryValues = {{ expense_category_values|safe }};
+      if (expenseCategoryCtx) {
+        new Chart(expenseCategoryCtx, {
+          type: "doughnut",
+          data: {
+            labels: expenseCategoryLabels,
+            datasets: [
+              {
+                data: expenseCategoryValues,
+                backgroundColor: ["#ef4444", "#f97316", "#eab308", "#8b5cf6", "#6366f1", "#14b8a6"],
+                borderColor: "#ffffff",
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
