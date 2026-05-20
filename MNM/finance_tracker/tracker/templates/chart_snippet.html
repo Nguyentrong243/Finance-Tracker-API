@@ -1,0 +1,220 @@
+<!-- CHART.JS BAR CHART - INCOME VS EXPENSE -->
+<!-- Thêm script Chart.js vào <head> của HTML (nếu chưa có) -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+
+<!-- HTML Code -->
+<div
+  class="chart-card"
+  style="
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  "
+>
+  <h3
+    style="
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 1.5rem;
+    "
+  >
+    <i class="fas fa-chart-bar me-2" style="color: #2563eb"></i>
+    Thu vs Chi
+  </h3>
+
+  <!-- Canvas để vẽ biểu đồ -->
+  <div style="position: relative; height: 300px">
+    <canvas id="incomeExpenseChart"></canvas>
+  </div>
+
+  <!-- Stats Summary -->
+  <div
+    style="
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    "
+  >
+    <div
+      style="
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+      "
+    >
+      <div
+        style="
+          font-size: 0.85rem;
+          color: #10b981;
+          font-weight: 600;
+          text-transform: uppercase;
+        "
+      >
+        Thu Nhập
+      </div>
+      <div style="font-size: 1.3rem; font-weight: 800; color: #10b981">
+        {{ summary.total_income|floatformat:0 }}₫
+      </div>
+    </div>
+    <div
+      style="
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+      "
+    >
+      <div
+        style="
+          font-size: 0.85rem;
+          color: #ef4444;
+          font-weight: 600;
+          text-transform: uppercase;
+        "
+      >
+        Chi Tiêu
+      </div>
+      <div style="font-size: 1.3rem; font-weight: 800; color: #ef4444">
+        {{ summary.total_expenses|floatformat:0 }}₫
+      </div>
+    </div>
+    <div
+      style="
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+      "
+    >
+      <div
+        style="
+          font-size: 0.85rem;
+          color: #2563eb;
+          font-weight: 600;
+          text-transform: uppercase;
+        "
+      >
+        Số Dư
+      </div>
+      <div style="font-size: 1.3rem; font-weight: 800; color: #2563eb">
+        {{ summary.balance|floatformat:0 }}₫
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JAVASCRIPT CODE -->
+<script>
+  // Lấy dữ liệu từ Django context
+  const incomeData = {{ summary.total_income|default:"0" }};
+  const expenseData = {{ summary.total_expenses|default:"0" }};
+
+  // Khởi tạo Chart.js Bar Chart
+  const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Thu Nhập', 'Chi Tiêu'],
+      datasets: [
+        {
+          label: 'Số tiền (₫)',
+          data: [incomeData, expenseData],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.85)',      // Xanh lá (income)
+            'rgba(239, 68, 68, 0.85)'        // Đỏ (expense)
+          ],
+          borderColor: [
+            'rgb(16, 185, 129)',
+            'rgb(239, 68, 68)'
+          ],
+          borderWidth: 2,
+          borderRadius: 8,
+          hoverBackgroundColor: [
+            'rgba(16, 185, 129, 1)',
+            'rgba(239, 68, 68, 1)'
+          ],
+          hoverBorderWidth: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            font: {
+              size: 14,
+              weight: 600
+            },
+            color: '#374151',
+            padding: 15,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(31, 41, 55, 0.9)',
+          padding: 12,
+          titleFont: {
+            size: 14,
+            weight: 'bold'
+          },
+          bodyFont: {
+            size: 13
+          },
+          borderColor: 'rgba(31, 41, 55, 1)',
+          borderWidth: 1,
+          cornerRadius: 6,
+          callbacks: {
+            label: function(context) {
+              const value = context.parsed.y;
+              return context.dataset.label + ': ' + value.toLocaleString('vi-VN') + '₫';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: {
+              size: 12
+            },
+            color: '#6b7280',
+            callback: function(value) {
+              // Format Y-axis labels
+              if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+              } else if (value >= 1000) {
+                return (value / 1000).toFixed(1) + 'K';
+              }
+              return value;
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)',
+            drawBorder: false
+          }
+        },
+        x: {
+          ticks: {
+            font: {
+              size: 13,
+              weight: 600
+            },
+            color: '#374151'
+          },
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+</script>

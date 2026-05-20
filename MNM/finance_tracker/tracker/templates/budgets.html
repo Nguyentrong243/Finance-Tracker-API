@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ngân sách - Finance Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        body.theme-dark {
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15);
+            border-bottom: 0;
+            padding: 1rem 2rem;
+        }
+
+        .navbar .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-logo i {
+            font-size: 1.8rem;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0;
+        }
+
+        .page-header p {
+            color: #4a5568;
+            font-size: 0.95rem;
+            margin: 0.5rem 0 0 0;
+        }
+
+        body.theme-dark .page-header h1 {
+            color: #f8fafc;
+        }
+
+        body.theme-dark .page-header p {
+            color: #cbd5e1;
+        }
+
+        .btn-edit {
+            background: #000;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-edit:hover {
+            background: #222;
+            transform: translateY(-2px);
+        }
+
+        .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .budget-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .budget-card:hover {
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        body.theme-dark .budget-card {
+            background: #111827;
+            color: #e2e8f0;
+        }
+
+        .budget-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .budget-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .budget-icon.eating {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+        }
+
+        .budget-icon.housing {
+            background: linear-gradient(135deg, #5b7cfa, #748ffc);
+        }
+
+        .budget-icon.transport {
+            background: linear-gradient(135deg, #51cf66, #69db7c);
+        }
+
+        .budget-icon.shopping {
+            background: linear-gradient(135deg, #da77f2, #e599f7);
+        }
+
+        .budget-icon.entertainment {
+            background: linear-gradient(135deg, #ff8787, #ff9999);
+        }
+
+        .budget-icon.health {
+            background: linear-gradient(135deg, #f03e3e, #ff6b6b);
+        }
+
+        .budget-percentage {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4a5568;
+        }
+
+        .budget-percentage.warning {
+            color: #ff8c42;
+        }
+
+        .budget-percentage.danger {
+            color: #f03e3e;
+        }
+
+        .budget-category {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        body.theme-dark .budget-category {
+            color: #f8fafc;
+        }
+
+        .budget-amount {
+            font-size: 0.95rem;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+
+        body.theme-dark .budget-amount {
+            color: #cbd5e1;
+        }
+
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+
+        .progress {
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            height: 100%;
+        }
+
+        .progress-bar.success {
+            background: linear-gradient(90deg, #51cf66, #69db7c);
+        }
+
+        .progress-bar.warning {
+            background: linear-gradient(90deg, #ff8c42, #ffa500);
+        }
+
+        .progress-bar.danger {
+            background: linear-gradient(90deg, #f03e3e, #ff6b6b);
+        }
+
+        .budget-remaining {
+            font-size: 0.9rem;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        body.theme-dark .budget-remaining {
+            color: #cbd5e1;
+        }
+
+        .remaining-amount {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        body.theme-dark .remaining-amount {
+            color: #f8fafc;
+        }
+
+        .budget-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        body.theme-dark .budget-summary {
+            background: #111827;
+            color: #e2e8f0;
+        }
+
+        .summary-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 1.5rem;
+        }
+
+        body.theme-dark .summary-title {
+            color: #f8fafc;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        body.theme-dark .summary-label {
+            color: #cbd5e1;
+        }
+
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1a202c;
+        }
+
+        body.theme-dark .summary-value {
+            color: #f8fafc;
+        }
+
+        .summary-value.income {
+            color: #1a202c;
+        }
+
+        .summary-value.expense {
+            color: #f03e3e;
+        }
+
+        .summary-value.remaining {
+            color: #51cf66;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .budget-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="{% if user.is_authenticated %}theme-{{ user.settings_profile.theme_mode }}{% else %}theme-light{% endif %}">
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+            <a class="brand-logo" href="{% url 'home' %}">
+                <i class="fas fa-wallet"></i>
+                Finance Tracker
+            </a>
+        </div>
+    </nav>
+
+    <main style="margin-top: 80px;">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1>Ngân sách tháng {{ month|date:"m" }}</h1>
+                    <p>Theo dõi chi tiêu theo từng danh mục</p>
+                </div>
+                <button class="btn-edit" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+                    <i class="fas fa-edit"></i>
+                    Chỉnh sửa ngân sách
+                </button>
+            </div>
+
+            <!-- Budget Grid -->
+            <div class="budget-grid">
+                {% for item in budget_progress %}
+                <div class="budget-card">
+                    <div class="budget-card-header">
+                        <div class="budget-icon {% if 'Ăn' in item.category %}eating{% elif 'Nhà' in item.category %}housing{% elif 'Di' in item.category %}transport{% elif 'Mua' in item.category %}shopping{% elif 'Giải' in item.category %}entertainment{% elif 'Y tế' in item.category %}health{% else %}eating{% endif %}">
+                            {% if 'Ăn' in item.category %}
+                                <i class="fas fa-utensils"></i>
+                            {% elif 'Nhà' in item.category %}
+                                <i class="fas fa-home"></i>
+                            {% elif 'Di' in item.category %}
+                                <i class="fas fa-car"></i>
+                            {% elif 'Mua' in item.category %}
+                                <i class="fas fa-shopping-bag"></i>
+                            {% elif 'Giải' in item.category %}
+                                <i class="fas fa-gamepad"></i>
+                            {% elif 'Y tế' in item.category %}
+                                <i class="fas fa-heartbeat"></i>
+                            {% else %}
+                                <i class="fas fa-tag"></i>
+                            {% endif %}
+                        </div>
+                        <div class="budget-percentage {% if item.percentage >= 100 %}danger{% elif item.percentage >= 80 %}warning{% endif %}">
+                            {{ item.percentage }}%
+                        </div>
+                    </div>
+
+                    <h5 class="budget-category">{{ item.category }}</h5>
+                    <p class="budget-amount">{{ item.spent|intcomma }}đ / {{ item.limit|intcomma }}đ</p>
+
+                    <div class="progress-container">
+                        <div class="progress">
+                            <div class="progress-bar {% if item.percentage >= 100 %}danger{% elif item.percentage >= 80 %}warning{% else %}success{% endif %}" style="width: {% if item.percentage > 100 %}100{% else %}{{ item.percentage }}{% endif %}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="budget-remaining">
+                        <span>Còn lại:</span>
+                        <span class="remaining-amount">{{ item.remaining|intcomma }}đ</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Budget Summary -->
+            <div class="budget-summary">
+                <h3 class="summary-title">Tổng quan ngân sách</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">Tổng ngân sách</div>
+                        <div class="summary-value income">
+                            {{ total_budget|intcomma }}đ
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Đã chi tiêu</div>
+                        <div class="summary-value expense">
+                            {{ total_spent|intcomma }}đ
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Còn lại</div>
+                        <div class="summary-value remaining">
+                            {{ total_remaining|intcomma }}đ
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Add Budget -->
+    <div class="modal fade" id="addBudgetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm ngân sách mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Danh mục</label>
+                            <input class="form-control" type="text" name="category" placeholder="Ví dụ: Ăn uống" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hạn mức hàng tháng</label>
+                            <input class="form-control" type="number" name="limit" min="0" placeholder="3000000" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

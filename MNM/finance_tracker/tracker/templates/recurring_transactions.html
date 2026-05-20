@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="py-5">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1>Giao dịch định kỳ</h1>
+      <p>Thiết lập các khoản thu/chi cố định theo chu kỳ và tạo giao dịch tự động.</p>
+    </div>
+    <form method="post" class="d-flex">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="generate" />
+      <button type="submit" class="btn btn-success">Tạo giao dịch định kỳ ngay</button>
+    </form>
+  </div>
+
+  <div class="row gy-4">
+    <div class="col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title">Thêm giao dịch định kỳ</h4>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create" />
+            <div class="mb-3">
+              <label class="form-label">Loại</label>
+              <select class="form-select" name="type" required>
+                <option value="income">Thu nhập</option>
+                <option value="expense">Chi tiêu</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Danh mục</label>
+              <input class="form-control" type="text" name="category" placeholder="Ví dụ: Tiền nhà" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Số tiền</label>
+              <input class="form-control" type="number" name="amount" min="0" placeholder="1000000" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Chu kỳ</label>
+              <select class="form-select" name="frequency" required>
+                <option value="weekly">Hàng tuần</option>
+                <option value="biweekly">Hai tuần một lần</option>
+                <option value="monthly">Hàng tháng</option>
+                <option value="quarterly">Hàng quý</option>
+                <option value="yearly">Hàng năm</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Bắt đầu từ</label>
+              <input class="form-control" type="date" name="start_date" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Kết thúc (tùy chọn)</label>
+              <input class="form-control" type="date" name="end_date" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ví</label>
+              <input class="form-control" type="text" name="wallet" placeholder="Ví chính" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ghi chú</label>
+              <textarea class="form-control" name="notes" rows="3" placeholder="Ví dụ: Tiền thuê nhà"></textarea>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Lưu định kỳ</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title">Các giao dịch định kỳ</h4>
+          {% if recurring_transactions %}
+          <div class="list-group">
+            {% for item in recurring_transactions %}
+            <div class="list-group-item mb-3 rounded-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h5 class="mb-1">{{ item.tx.category }}</h5>
+                  <p class="mb-1 text-muted">{{ item.tx.get_type_display }} • {{ item.tx.get_frequency_display }}</p>
+                  <p class="mb-1">Số tiền: {{ item.tx.amount|intcomma }}₫ • Ví: {{ item.tx.wallet }}</p>
+                  <p class="mb-1">Bắt đầu: {{ item.tx.start_date }}{% if item.tx.end_date %} • Kết thúc: {{ item.tx.end_date }}{% endif %}</p>
+                  <small class="text-muted">Ngày tiếp theo: {{ item.next_date }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge {% if item.tx.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if item.tx.is_active %}Đang hoạt động{% else %}Đã tắt{% endif %}
+                  </span>
+                </div>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="toggle" />
+                  <input type="hidden" name="recurring_id" value="{{ item.tx.id }}" />
+                  <button type="submit" class="btn btn-sm {% if item.tx.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                    {% if item.tx.is_active %}Tắt{% else %}Bật{% endif %}
+                  </button>
+                </form>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete" />
+                  <input type="hidden" name="recurring_id" value="{{ item.tx.id }}" />
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p>Chưa có giao dịch định kỳ nào. Bạn có thể tạo một lộ trình định kỳ cho thu nhập hoặc chi phí.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

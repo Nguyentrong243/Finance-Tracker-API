@@ -1,0 +1,679 @@
+<!doctype html>
+{% load humanize %}
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Báo Cáo - Finance Tracker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      /* Navbar */
+      .navbar {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15);
+        border-bottom: 0;
+        padding: 1rem 2rem;
+      }
+
+      .navbar .brand-logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .navbar .brand-logo i {
+        font-size: 1.8rem;
+      }
+
+      .navbar-nav .nav-item {
+        margin-left: 1rem;
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        transition: color 0.3s ease;
+      }
+
+      .nav-link:hover {
+        color: white !important;
+      }
+
+      .user-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 1.5rem;
+      }
+
+      .dropdown-menu {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .dropdown-item {
+        padding: 0.75rem 1.5rem;
+        color: #2d3748;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+
+      .dropdown-item:hover {
+        background-color: #f3f4f6;
+        color: #2563eb;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        background: white;
+        min-height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 280px;
+        padding-top: 80px;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
+        overflow-y: auto;
+        z-index: 999;
+      }
+
+      .sidebar-nav {
+        list-style: none;
+        padding: 1.5rem 0;
+      }
+
+      .sidebar-nav .nav-item {
+        margin: 0.5rem 0;
+      }
+
+      .sidebar-nav .nav-link {
+        color: #000000 !important;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1.5rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+      }
+
+      .sidebar-nav .nav-link i {
+        width: 24px;
+        font-size: 1.1rem;
+      }
+
+      .sidebar-nav .nav-link:hover {
+        background-color: #f3f4f6;
+        color: #000000 !important;
+        border-left-color: #2563eb;
+      }
+
+      .sidebar-nav .nav-link.active {
+        background-color: #e0e7ff;
+        color: #000000 !important;
+        border-left-color: #2563eb;
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-left: 280px;
+        margin-top: 70px;
+        padding: 2rem;
+        min-height: calc(100vh - 70px);
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+
+      .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+      }
+
+      .page-header p {
+        color: #2d3748;
+        font-size: 0.95rem;
+      }
+
+      /* Stats Cards */
+      .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        opacity: 0.1;
+      }
+
+      .stat-card:hover {
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+      }
+
+      .stat-card.income {
+        border-left-color: #10b981;
+      }
+
+      .stat-card.income::before {
+        background: #10b981;
+      }
+
+      .stat-card.expense {
+        border-left-color: #ef4444;
+      }
+
+      .stat-card.expense::before {
+        background: #ef4444;
+      }
+
+      .stat-card.balance {
+        border-left-color: #3b82f6;
+      }
+
+      .stat-card.balance::before {
+        background: #3b82f6;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        color: #4a5568;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1a202c;
+      }
+
+      /* Charts Section */
+      .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      }
+
+      .chart-card h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 1.5rem;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+      }
+
+      /* Category Tables */
+      .category-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        margin-bottom: 2rem;
+      }
+
+      .category-section h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 1.5rem;
+      }
+
+      .category-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .category-table th {
+        background: white;
+        color: #1a202c;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .category-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: #2d3748;
+      }
+
+      .category-table tr:hover {
+        background: white;
+      }
+
+      .category-amount {
+        font-weight: 600;
+        color: #1a202c;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 100%;
+          padding-top: 0;
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar.show {
+          transform: translateX(0);
+        }
+
+        .main-content {
+          margin-left: 0;
+          padding: 1rem;
+        }
+
+        .charts-container {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-container {
+          grid-template-columns: 1fr;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+      }
+
+      /* Scrollbar */
+      .sidebar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: white;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body class="{% if user.is_authenticated %}theme-{{ user.settings_profile.theme_mode }}{% else %}theme-light{% endif %}">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container-fluid">
+        <a class="brand-logo" href="{% url 'home' %}">
+          <i class="fas fa-wallet"></i>
+          Finance Tracker
+        </a>
+
+        <button
+          class="btn btn-light d-lg-none"
+          type="button"
+          id="sidebarToggle"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="ms-auto d-flex align-items-center">
+          <div class="dropdown">
+            <div
+              class="user-avatar"
+              id="userDropdown"
+              data-bs-toggle="dropdown"
+            >
+              {{ user.username|first|upper }}
+            </div>
+            <ul
+              class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="userDropdown"
+            >
+              <li>
+                <a class="dropdown-item" href="#profile">
+                  <i class="fas fa-user me-2"></i>Hồ sơ
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'settings' %}">
+                  <i class="fas fa-cog me-2"></i>Cài đặt
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'logout' %}">
+                  <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <ul class="sidebar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'dashboard' %}">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'transactions' %}">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Giao dịch</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'reports' %}">
+            <i class="fas fa-chart-pie"></i>
+            <span>Báo cáo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'settings' %}">
+            <i class="fas fa-sliders-h"></i>
+            <span>Cài đặt</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>Báo Cáo Tài Chính</h1>
+          <p>Phân tích chi tiết về thu nhập và chi tiêu của bạn</p>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-container">
+        <div class="stat-card income">
+          <div class="stat-label">
+            <i class="fas fa-arrow-down"></i>Tổng thu nhập
+          </div>
+          <div class="stat-value">
+            {{ total_income|default:"0"|floatformat:0|intcomma }}₫
+          </div>
+        </div>
+
+        <div class="stat-card expense">
+          <div class="stat-label">
+            <i class="fas fa-arrow-up"></i>Tổng chi tiêu
+          </div>
+          <div class="stat-value">
+            {{ total_expense|default:"0"|floatformat:0|intcomma }}₫
+          </div>
+        </div>
+
+        <div class="stat-card balance">
+          <div class="stat-label"><i class="fas fa-wallet"></i>Số dư</div>
+          <div class="stat-value">
+            {{ balance|default:"0"|floatformat:0|intcomma }}₫
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-container">
+        <div class="chart-card">
+          <h3>Phân bổ Thu Nhập Theo Danh Mục</h3>
+          <div class="chart-wrapper">
+            <canvas id="incomeChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Phân bổ Chi Tiêu Theo Danh Mục</h3>
+          <div class="chart-wrapper">
+            <canvas id="expenseChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Income by Category -->
+      <div class="category-section">
+        <h3>Thu Nhập Theo Danh Mục</h3>
+        <table class="category-table">
+          <thead>
+            <tr>
+              <th>Danh Mục</th>
+              <th>Số Tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in income_by_category %}
+            <tr>
+              <td>{{ item.category }}</td>
+              <td class="category-amount">
+                {{ item.total|default:"0"|floatformat:0|intcomma }}₫
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="2" style="text-align: center; color: #718096">
+                Không có dữ liệu thu nhập
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Expense by Category -->
+      <div class="category-section">
+        <h3>Chi Tiêu Theo Danh Mục</h3>
+        <table class="category-table">
+          <thead>
+            <tr>
+              <th>Danh Mục</th>
+              <th>Số Tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in expense_by_category %}
+            <tr>
+              <td>{{ item.category }}</td>
+              <td class="category-amount">
+                {{ item.total|default:"0"|floatformat:0|intcomma }}₫
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="2" style="text-align: center; color: #718096">
+                Không có dữ liệu chi tiêu
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Sidebar Toggle
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const sidebar = document.getElementById("sidebar");
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("show");
+        });
+
+        document.addEventListener("click", (e) => {
+          if (
+            !sidebar.contains(e.target) &&
+            !sidebarToggle.contains(e.target) &&
+            window.innerWidth < 768
+          ) {
+            sidebar.classList.remove("show");
+          }
+        });
+      }
+
+      // Get chart data from Django context
+      const incomeData = {
+        {% for item in income_by_category %}
+          "{{ item.category }}": {{ item.total|default:"0" }},
+        {% endfor %}
+      };
+
+      const expenseData = {
+        {% for item in expense_by_category %}
+          "{{ item.category }}": {{ item.total|default:"0" }},
+        {% endfor %}
+      };
+
+      const incomeCtx = document.getElementById("incomeChart");
+      if (incomeCtx && Object.keys(incomeData).length > 0) {
+        new Chart(incomeCtx, {
+          type: "doughnut",
+          data: {
+            labels: Object.keys(incomeData),
+            datasets: [
+              {
+                data: Object.values(incomeData),
+                backgroundColor: [
+                  "#10b981",
+                  "#3b82f6",
+                  "#f59e0b",
+                  "#8b5cf6",
+                  "#ec4899",
+                ],
+                borderColor: "#ffffff",
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+
+      const expenseCtx = document.getElementById("expenseChart");
+      if (expenseCtx && Object.keys(expenseData).length > 0) {
+        new Chart(expenseCtx, {
+          type: "doughnut",
+          data: {
+            labels: Object.keys(expenseData),
+            datasets: [
+              {
+                data: Object.values(expenseData),
+                backgroundColor: [
+                  "#ef4444",
+                  "#f97316",
+                  "#eab308",
+                  "#d97706",
+                  "#dc2626",
+                ],
+                borderColor: "#ffffff",
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+    </script>
+  </body>
+</html>
